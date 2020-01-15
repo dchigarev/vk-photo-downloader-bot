@@ -70,8 +70,16 @@ class vk_wrapper:
     def send_message(self, message = '', attachment = None, ):
         peer_id = self.get_dialog_id()
         
-        if not attachment is None:   
+        # try:
+        #     if not attachment is None:  
+        #         attachment = self.__uploader.document_message(attachment, peer_id = peer_id)
+        # except:
+        #     message += "\nError: can't upload attachment."
+        #     attachment = None
+
+        if not attachment is None:  
             attachment = self.__uploader.document_message(attachment, peer_id = peer_id)
+
 
         print('attachment', attachment)
         params = {

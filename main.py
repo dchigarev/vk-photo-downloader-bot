@@ -75,7 +75,7 @@ def handle_request(event, links, request_handler, *args):
 
     vkHandler.send_message('downloading attachments...')
     download_files(links, request_dir, *args)
-    vkHandler.send_message('performing files...')
+    vkHandler.send_message('processing files...')
     arch_path = request_handler(request_dir)
     vkHandler.send_message('uploading archive...')
     vkHandler.send_message(attachment = arch_path)
@@ -88,7 +88,7 @@ def download_file(kwargs):
 
 
 def download_files(links, path = ".", name_generator = sequence_generator()):
-    pool = Pool(min(len(links), os.cpu_count()))
+    pool = Pool(max(min(len(links), os.cpu_count()), 1))
     links = [{'url': link, 'path': path, 'name': next(name_generator)} for link in links]
     print(links)
     pool.map(download_file, links)
@@ -97,16 +97,25 @@ def download_files(links, path = ".", name_generator = sequence_generator()):
         
 
 def bot_loop():
+    print("Bot loop started.")
     for event in vkHandler.listen():
         if event.type == vkHandler.longpoll.VkBotEventType.MESSAGE_NEW:
             photos, command = vkHandler.get_photos_links(), vkHandler.get_command()
-            handle_request(event, photos, get_img_request_handler(command), img_names_generator())
+            try:
+                handle_request(event, photos, get_img_request_handler(command), img_names_generator())
+            except BaseException as e:
+                vkHandler.send_message("An error occured while processing your request.\n"+str(e))
 
 
 def main():
     init()
     print("Bot successfuly inited. Starting bot loop.")
-    bot_loop()
+    while True:
+        try:
+            bot_loop()
+        except BaseException as e:
+            print(e)
+            print("An error occured while bot worked. Restarting...")
 
 if __name__ == '__main__':
     main()
